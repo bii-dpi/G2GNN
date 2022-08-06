@@ -82,7 +82,9 @@ class TUDataset(InMemoryDataset):
             num_edge_attributes = self.num_edge_attributes
             self.data.edge_attr = self.data.edge_attr[:, num_edge_attributes:]
 
-        if not (self.name == 'MUTAG' or self.name == 'PTC_MR' or self.name == 'DD' or self.name == 'PROTEINS' or self.name == 'NCI1' or self.name == 'NCI109' or self.name == 'Mutagenicity'):
+        if not (self.name == 'MUTAG' or self.name == 'PTC_MR' or self.name ==
+'DD' or self.name == 'PROTEINS' or self.name == 'NCI1' or self.name == 'NCI109'
+or self.name == 'Mutagenicity' or self.name == "dtb" or self.name == "btd"):
             edge_index = self.data.edge_index[0, :].numpy()
             _, num_edge = self.data.edge_index.size()
             nlist = [edge_index[n] + 1 for n in range(num_edge - 1) if edge_index[n] > edge_index[n + 1]]

@@ -2,33 +2,16 @@ from model import *
 from learn import *
 from dataset import *
 
-import torch
-import torch.nn.functional as F
-from torch_geometric.loader import DataLoader
-from torch_geometric.utils import add_remaining_self_loops, degree, to_networkx, to_scipy_sparse_matrix
-import networkx as nx
-
-from grakel.datasets import fetch_dataset
-from grakel.kernels import ShortestPath
-
-
-import numpy as np
-import argparse
-from tqdm import tqdm
-import random
-import math
-from os import path
-
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--dataset', type=str, default='MUTAG')
-parser.add_argument('--runs', type=int, default=50)
-parser.add_argument('--imb_ratio', type=float, default=0.1)
+parser.add_argument('--direction', type=str, default='btd')
+parser.add_argument('--runs', type=int, default=1)
+parser.add_argument('--imb_ratio', type=float, default=0.5)
 
 
 parser.add_argument('--epochs', type=int, default=1000)
 parser.add_argument('--early_stopping', type=int, default=100)
-parser.add_argument('--seed', type=int, default=100)
+parser.add_argument('--seed', type=int, default=12345)
 parser.add_argument('--n_hidden', type=int, default=128)
 parser.add_argument('--dropout', type=float, default=0.5)
 parser.add_argument('--lr', type=float, default=0.01)

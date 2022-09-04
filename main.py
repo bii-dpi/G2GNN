@@ -2,10 +2,12 @@ from model import *
 from learn import *
 from dataset import *
 
+print(torch.cuda.is_available())
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--direction', type=str, default='btd')
 parser.add_argument('--runs', type=int, default=1)
+parser.add_argument('--cuda_num', type=int, default=1)
 parser.add_argument('--imb_ratio', type=float, default=0.5)
 
 
@@ -15,8 +17,8 @@ parser.add_argument('--seed', type=int, default=12345)
 parser.add_argument('--n_hidden', type=int, default=128)
 parser.add_argument('--dropout', type=float, default=0.5)
 parser.add_argument('--lr', type=float, default=0.01)
-parser.add_argument('--num_training', type=int, default=100)
-parser.add_argument('--num_val', type=int, default=30)
+parser.add_argument('--num_training', type=int, default=128)
+parser.add_argument('--num_val', type=int, default=64)
 
 parser.add_argument('--setting', type=str, default='aug')
 parser.add_argument('--aug', type=str, default='RE')
@@ -32,8 +34,11 @@ parser.add_argument('--temp', type=float, default=0.5)
 
 args = parser.parse_args()
 
-dataset, args.n_feat, args.n_class, args.mapping = get_TUDataset(args.dataset)
+args.n_feat = 8
+args.n_class = 2
+dataset = None
 
+'''
 # ====== compute the kernel and select the top k
 if(args.setting in ['knn', 'knn_aug']):
     kernel_file = 'kernel/' + args.dataset + args.kernel_type + '.txt'
@@ -52,6 +57,7 @@ if(args.setting in ['knn', 'knn_aug']):
     args.kernel_idx = torch.topk(
         args.kernel_simi, k=args.knn, dim=1, largest=True)[1][:, 1:]
     args.knn_edge_index = construct_knn(args.kernel_idx)
+'''
 
 
 F1_micro = np.zeros(args.runs, dtype=float)
@@ -67,37 +73,34 @@ for count in pbar:
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
-    train_dataset, val_dataset, test_dataset, args.class_train_num_graph, args.class_val_num_graph = shuffle(
-        args.dataset, dataset, args.imb_ratio, args.num_training, args.num_val)
-
-    args.min_num_graph = min(args.class_train_num_graph)
-
+    '''
     if(args.setting in ['upsampling', 'knn', 'knn_aug', 'aug'] and args.min_num_graph != 0 and args.imb_ratio != 0.5):
         train_dataset = upsample(train_dataset)
         val_dataset = upsample(val_dataset)
+    '''
 
     # if(args.setting == 'reweight'): #if want to pre-reweighting
     #     args.weight = max(args.class_train_num_graph) / \
     #         args.class_train_num_graph
 
+    '''
     train_label = torch.tensor([data.y.item() for data in train_dataset])
     val_label = torch.tensor([data.y.item() for data in val_dataset])
     test_label = torch.tensor([data.y.item() for data in test_dataset])
+    '''
 
     # print([(train_label == i).sum().item() for i in range(args.n_class)])
     # print([(val_label == i).sum().item() for i in range(args.n_class)])
     # print([(test_label == i).sum().item() for i in range(args.n_class)])
 
-    train_loader = DataLoader(
-        train_dataset, batch_size=args.batch_size, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=args.batch_size)
-    test_loader = DataLoader(test_dataset, batch_size=args.batch_size)
+    train_loader, val_loader, test_loader = get_dataloaders(args.direction,
+                                                             args.batch_size)
 
-    args.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    args.device = torch.device(f'cuda:{args.cuda_num}' if torch.cuda.is_available() else 'cpu')
 
     encoder = GIN(args).to(args.device)
     classifier = MLP_Classifier(args).to(args.device)
-    args.class_train_num_graph = args.class_train_num_graph.to(args.device)
+    #args.class_train_num_graph = args.class_train_num_graph.to(args.device)
     if(args.setting in ['knn', 'knn_aug']):
         args.knn_edge_index = args.knn_edge_index.to(args.device)
     # if(args.setting == 'reweight'):

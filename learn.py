@@ -349,6 +349,8 @@ def eval(encoder, classifier, data_loader, dataset, optimizer_e, optimizer_c, ar
 
         total_loss += float(loss) * data.num_graphs
 
+
+
     acc_c = f1_score(truth, pred, labels=np.arange(
         0, 2), average=None, zero_division=0)
     acc = (np.array(pred) == np.array(truth)).sum() / len(truth)

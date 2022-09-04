@@ -25,10 +25,7 @@ def read_examples(direction, suffix):
     return actives, decoys
 
 
-def get_dataloaders(direction, seed, batch_size):
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-
+def get_dataloaders(direction, batch_size):
     actives, decoys = read_examples(direction, "training_normal")
     np.random.shuffle(actives)
     np.random.shuffle(decoys)
@@ -58,5 +55,3 @@ def get_dataloaders(direction, seed, batch_size):
 
     return training_dl, validation_dl, testing_dl
 
-
-get_dataloaders("btd", 12345, 10)
